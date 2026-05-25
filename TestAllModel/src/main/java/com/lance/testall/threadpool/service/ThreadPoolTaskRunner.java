@@ -26,32 +26,32 @@ public class ThreadPoolTaskRunner {
     /**
      * 模拟慢 IO 后写入 SUCCESS；异常时写入 FAIL。
      */
-    public void runSuccessTask(String batchId, int taskIndex, String batchTag, int workDelayMs) {
+    public void runSuccessTask(String executorType, String batchId, int taskIndex, String batchTag, int workDelayMs) {
         LocalDateTime now = LocalDateTime.now();
         try {
             if (workDelayMs > 0) {
                 Thread.sleep(workDelayMs);
             }
-            ThreadPoolTaskLog row = newRow(batchId, taskIndex, batchTag, now);
+            ThreadPoolTaskLog row = newRow(executorType, batchId, taskIndex, batchTag, now);
             row.setThreadName(Thread.currentThread().getName());
             row.setStatus(TaskLogStatus.SUCCESS);
             row.setFinishedAt(LocalDateTime.now());
             taskLogMapper.insert(row);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            insertFail(batchId, taskIndex, batchTag, now, "线程被中断: " + e.getMessage());
+            insertFail(executorType, batchId, taskIndex, batchTag, now, "线程被中断: " + e.getMessage());
         } catch (Exception e) {
             log.error("任务执行失败 batchId={}, taskIndex={}", batchId, taskIndex, e);
-            insertFail(batchId, taskIndex, batchTag, now, e.getMessage());
+            insertFail(executorType, batchId, taskIndex, batchTag, now, e.getMessage());
         }
     }
 
     /**
      * 任务未进入执行队列时被拒绝，写入 REJECTED。
      */
-    public void insertRejected(String batchId, int taskIndex, String batchTag) {
+    public void insertRejected(String executorType, String batchId, int taskIndex, String batchTag) {
         LocalDateTime now = LocalDateTime.now();
-        ThreadPoolTaskLog row = newRow(batchId, taskIndex, batchTag, now);
+        ThreadPoolTaskLog row = newRow(executorType, batchId, taskIndex, batchTag, now);
         row.setThreadName(Thread.currentThread().getName());
         row.setStatus(TaskLogStatus.REJECTED);
         row.setErrorMessage("RejectedExecutionException: 线程池队列已满且已达最大线程数");
@@ -59,8 +59,9 @@ public class ThreadPoolTaskRunner {
         taskLogMapper.insert(row);
     }
 
-    private void insertFail(String batchId, int taskIndex, String batchTag, LocalDateTime createdAt, String message) {
-        ThreadPoolTaskLog row = newRow(batchId, taskIndex, batchTag, createdAt);
+    private void insertFail(String executorType, String batchId, int taskIndex, String batchTag,
+                            LocalDateTime createdAt, String message) {
+        ThreadPoolTaskLog row = newRow(executorType, batchId, taskIndex, batchTag, createdAt);
         row.setThreadName(Thread.currentThread().getName());
         row.setStatus(TaskLogStatus.FAIL);
         row.setErrorMessage(truncate(message, 500));
@@ -68,8 +69,10 @@ public class ThreadPoolTaskRunner {
         taskLogMapper.insert(row);
     }
 
-    private static ThreadPoolTaskLog newRow(String batchId, int taskIndex, String batchTag, LocalDateTime createdAt) {
+    private static ThreadPoolTaskLog newRow(String executorType, String batchId, int taskIndex, String batchTag,
+                                            LocalDateTime createdAt) {
         ThreadPoolTaskLog row = new ThreadPoolTaskLog();
+        row.setExecutorType(executorType);
         row.setBatchId(batchId);
         row.setTaskIndex(taskIndex);
         row.setBatchTag(batchTag);

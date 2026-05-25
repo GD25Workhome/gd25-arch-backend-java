@@ -19,6 +19,9 @@ public class ThreadPoolTaskLog {
 
     private Integer taskIndex;
 
+    /** JDK 或 SPRING，用于对照实验 */
+    private String executorType;
+
     private String threadName;
 
     private String status;
@@ -53,6 +56,14 @@ public class ThreadPoolTaskLog {
 
     public void setTaskIndex(Integer taskIndex) {
         this.taskIndex = taskIndex;
+    }
+
+    public String getExecutorType() {
+        return executorType;
+    }
+
+    public void setExecutorType(String executorType) {
+        this.executorType = executorType;
     }
 
     public String getThreadName() {

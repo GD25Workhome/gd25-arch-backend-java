@@ -1,0 +1,7 @@
+# Spring 封装池 — 实验 3：小队列 + 小 max，便于触发拒绝
+thread-pool:
+  spring-demo:
+    core-pool-size: 1
+    max-pool-size: 2
+    queue-capacity: 5
+    rejection-policy: abort

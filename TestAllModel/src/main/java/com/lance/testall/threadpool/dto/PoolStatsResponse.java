@@ -5,8 +5,11 @@ package com.lance.testall.threadpool.dto;
  */
 public class PoolStatsResponse {
 
+    private String executorType;
     private int corePoolSize;
     private int maximumPoolSize;
+    /** 底层队列实现类简单名，如 ArrayBlockingQueue、LinkedBlockingQueue */
+    private String queueType;
     private int poolSize;
     private int activeCount;
     private int queueSize;
@@ -14,6 +17,22 @@ public class PoolStatsResponse {
     private long completedTaskCount;
     private long taskCount;
     private String rejectionPolicy;
+
+    public String getExecutorType() {
+        return executorType;
+    }
+
+    public void setExecutorType(String executorType) {
+        this.executorType = executorType;
+    }
+
+    public String getQueueType() {
+        return queueType;
+    }
+
+    public void setQueueType(String queueType) {
+        this.queueType = queueType;
+    }
 
     public int getCorePoolSize() {
         return corePoolSize;

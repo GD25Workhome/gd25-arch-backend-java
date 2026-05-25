@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class DemoPoolTask implements Runnable {
 
+    private final String executorType;
     private final String batchId;
     private final int taskIndex;
     private final String batchTag;
@@ -16,12 +17,14 @@ public class DemoPoolTask implements Runnable {
     private final ThreadPoolTaskRunner taskRunner;
     private final CountDownLatch latch;
 
-    public DemoPoolTask(String batchId,
+    public DemoPoolTask(String executorType,
+                        String batchId,
                         int taskIndex,
                         String batchTag,
                         int workDelayMs,
                         ThreadPoolTaskRunner taskRunner,
                         CountDownLatch latch) {
+        this.executorType = executorType;
         this.batchId = batchId;
         this.taskIndex = taskIndex;
         this.batchTag = batchTag;
@@ -45,7 +48,7 @@ public class DemoPoolTask implements Runnable {
     @Override
     public void run() {
         try {
-            taskRunner.runSuccessTask(batchId, taskIndex, batchTag, workDelayMs);
+            taskRunner.runSuccessTask(executorType, batchId, taskIndex, batchTag, workDelayMs);
         } finally {
             if (latch != null) {
                 latch.countDown();
@@ -58,7 +61,7 @@ public class DemoPoolTask implements Runnable {
      */
     public void onRejected() {
         try {
-            taskRunner.insertRejected(batchId, taskIndex, batchTag);
+            taskRunner.insertRejected(executorType, batchId, taskIndex, batchTag);
         } finally {
             if (latch != null) {
                 latch.countDown();

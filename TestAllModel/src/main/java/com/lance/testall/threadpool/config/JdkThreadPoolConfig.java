@@ -36,7 +36,7 @@ public class JdkThreadPoolConfig {
     @Bean(name = DEMO_EXECUTOR_BEAN)
     public ThreadPoolExecutor demoThreadPoolExecutor() {
         ThreadFactory threadFactory = new NamedThreadFactory(properties.getThreadNamePrefix());
-        RejectedExecutionHandler baseHandler = resolveBaseHandler(properties.getRejectionPolicy());
+        RejectedExecutionHandler baseHandler = ThreadPoolRejectionPolicyResolver.resolve(properties.getRejectionPolicy());
         RejectedExecutionHandler handler = new DemoRejectedExecutionHandler(baseHandler);
 
         this.executor = new ThreadPoolExecutor(
@@ -48,6 +48,8 @@ public class JdkThreadPoolConfig {
                 threadFactory,
                 handler
         );
+        // core 超时回收。下次突发任务会重新建线程，有一点冷启动开销
+        executor.allowCoreThreadTimeOut(true);
         log.info("demo 线程池已创建: core={}, max={}, queue={}, policy={}",
                 properties.getCorePoolSize(),
                 properties.getMaxPoolSize(),
@@ -71,18 +73,6 @@ public class JdkThreadPoolConfig {
             Thread.currentThread().interrupt();
             executor.shutdownNow();
         }
-    }
-
-    private static RejectedExecutionHandler resolveBaseHandler(String policy) {
-        if (policy == null) {
-            return new ThreadPoolExecutor.AbortPolicy();
-        }
-        return switch (policy.trim().toLowerCase()) {
-            case "caller-runs" -> new ThreadPoolExecutor.CallerRunsPolicy();
-            case "discard" -> new ThreadPoolExecutor.DiscardPolicy();
-            case "discard-oldest" -> new ThreadPoolExecutor.DiscardOldestPolicy();
-            default -> new ThreadPoolExecutor.AbortPolicy();
-        };
     }
 
     private static final class NamedThreadFactory implements ThreadFactory {

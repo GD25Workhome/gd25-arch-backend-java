@@ -8,6 +8,7 @@ import java.util.List;
 public class BatchSummaryResponse {
 
     private String batchId;
+    private String executorType;
     private int total;
     private int success;
     private int failed;
@@ -22,6 +23,14 @@ public class BatchSummaryResponse {
 
     public void setBatchId(String batchId) {
         this.batchId = batchId;
+    }
+
+    public String getExecutorType() {
+        return executorType;
+    }
+
+    public void setExecutorType(String executorType) {
+        this.executorType = executorType;
     }
 
     public int getTotal() {

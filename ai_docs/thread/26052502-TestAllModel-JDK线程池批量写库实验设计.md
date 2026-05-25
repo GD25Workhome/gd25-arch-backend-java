@@ -249,7 +249,8 @@ thread-pool:
 
 ## 相关文档
 
-- [26052503-TestAllModel-JDK线程池实验操作说明.md](./26052503-TestAllModel-JDK线程池实验操作说明.md) — 三组对照实验 curl 与观察要点
+- [26052503-TestAllModel-JDK线程池实验操作说明.md](./26052503-TestAllModel-JDK线程池实验操作说明.md) — JDK 三组对照实验 curl 与观察要点
+- [26052504-TestAllModel-Spring线程池封装实验总结.md](./26052504-TestAllModel-Spring线程池封装实验总结.md) — Spring 封装对照实验（`/api/thread-pool/spring`）
 - [26052501-Spring线程池使用与学习路径.md](./26052501-Spring线程池使用与学习路径.md) — 线程池理论与 Spring 学习路径总纲
 - [26052501 第 1 步：JDK ThreadPoolExecutor](./26052501-Spring线程池使用与学习路径.md#第-1-步jdk-threadpoolexecutor必学地基)
 - [26052501 第六节：动手练习](./26052501-Spring线程池使用与学习路径.md#六在本仓库中的动手练习顺序)
