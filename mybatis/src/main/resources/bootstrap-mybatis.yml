@@ -1,6 +1,8 @@
 
 # MyBatis 配置
+# 分页方言：mysql | postgresql | h2（与 spring.datasource 实际库一致）
 mybatis-plus:
+  db-type: mysql
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl

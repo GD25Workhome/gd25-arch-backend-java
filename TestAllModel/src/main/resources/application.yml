@@ -1,0 +1,36 @@
+# 默认：H2 内存库。切换数据库：
+#   PostgreSQL: --spring.profiles.active=postgresql
+#   MySQL:      --spring.profiles.active=mysql
+spring:
+  application:
+    name: test-all-model
+  datasource:
+    url: jdbc:h2:mem:testall;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+server:
+  port: 8080
+
+mybatis-plus:
+  db-type: h2
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  type-aliases-package: com.lance.testall.entity
+
+# 启动时 Mapper 探活：表由 schema.sql 初始化后再检查；本地 H2 可关闭避免时序告警
+mybatis:
+  boot:
+    check:
+      enable: false
+      block: false
+
+logging:
+  level:
+    com.lance.testall: INFO

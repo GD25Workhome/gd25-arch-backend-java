@@ -1,0 +1,21 @@
+# 使用 MySQL 时启动：--spring.profiles.active=mysql
+# 并设置环境变量 MYSQL_URL / MYSQL_USER / MYSQL_PASSWORD（或改下面默认值）
+mybatis-plus:
+  db-type: mysql
+
+spring:
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/testall?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+mybatis:
+  boot:
+    check:
+      enable: true
+      block: false

@@ -66,6 +66,11 @@
             </dependency>
             <dependency>
                 <groupId>com.lance</groupId>
+                <artifactId>web</artifactId>
+                <version>${com.lance.model.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lance</groupId>
                 <artifactId>chat</artifactId>
                 <version>${com.lance.model.version}</version>
             </dependency>

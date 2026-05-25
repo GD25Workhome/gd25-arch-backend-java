@@ -1,0 +1,21 @@
+# 连接本地 PostgreSQL：--spring.profiles.active=postgresql
+# 环境变量：PG_URL、PG_USER、PG_PASSWORD（见下方默认值）
+spring:
+  datasource:
+    url: ${PG_URL:jdbc:postgresql://localhost:5432/testdb}
+    driver-class-name: org.postgresql.Driver
+    username: ${PG_USER:m684620}
+    password: ${PG_PASSWORD:}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-postgresql.sql
+
+mybatis-plus:
+  db-type: postgresql
+
+mybatis:
+  boot:
+    check:
+      enable: true
+      block: false

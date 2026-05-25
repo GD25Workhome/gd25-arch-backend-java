@@ -3,6 +3,7 @@ package com.lance.mybatis;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,15 +16,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MyBatisPlusAutoConfiguration {
 
+    @Value("${mybatis-plus.db-type:mysql}")
+    private String dbType;
+
     /**
      * 配置 MyBatis-Plus 拦截器
-     * 添加分页插件
+     * 添加分页插件（方言由 mybatis-plus.db-type 决定：mysql / postgresql / h2）
      */
     @Bean
     @ConditionalOnMissingBean(MybatisPlusInterceptor.class)
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        DbType resolved = MybatisPlusDbTypeResolver.resolve(dbType);
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(resolved));
         return interceptor;
     }
 

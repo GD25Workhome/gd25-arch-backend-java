@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS test_entity (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    description VARCHAR(255)
+);

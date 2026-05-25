@@ -28,6 +28,12 @@
             <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
+        <!-- PostgreSQL JDBC 驱动（多数据源 profile 时使用） -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
         <!-- 添加实体转换工具 - MapStruct 支持 Java 17 -->
         <dependency>
             <groupId>org.mapstruct</groupId>
