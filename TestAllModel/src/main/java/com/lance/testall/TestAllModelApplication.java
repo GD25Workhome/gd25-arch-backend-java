@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
  * 聚合启动类：整合 web（REST）与 mybatis（持久层）。
  */
 @SpringBootApplication(scanBasePackages = "com.lance.testall")
-@MapperScan("com.lance.testall.mapper")
+@MapperScan({"com.lance.testall.mapper", "com.lance.testall.threadpool.mapper"})
 @Import(MyBatisPlusAutoConfiguration.class)
 public class TestAllModelApplication {
 

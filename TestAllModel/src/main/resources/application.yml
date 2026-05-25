@@ -22,7 +22,19 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  type-aliases-package: com.lance.testall.entity
+  type-aliases-package: com.lance.testall.entity,com.lance.testall.threadpool.entity
+
+# JDK 线程池实验（见 ai_docs/thread/26052502-*.md）
+# 实验 3 触发拒绝：可启用 profile exp3-reject（queue=5, max=2）
+thread-pool:
+  demo:
+    core-pool-size: 2
+    max-pool-size: 4
+    queue-capacity: 10
+    keep-alive-seconds: 60
+    thread-name-prefix: tp-demo-
+    rejection-policy: abort
+    await-termination-seconds: 30
 
 # 启动时 Mapper 探活：表由 schema.sql 初始化后再检查；本地 H2 可关闭避免时序告警
 mybatis:
