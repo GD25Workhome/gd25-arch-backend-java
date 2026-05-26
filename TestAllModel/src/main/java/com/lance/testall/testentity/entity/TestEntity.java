@@ -1,4 +1,4 @@
-package com.lance.testall.entity;
+package com.lance.testall.testentity.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

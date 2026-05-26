@@ -22,7 +22,7 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  type-aliases-package: com.lance.testall.entity,com.lance.testall.threadpool.entity
+  type-aliases-package: com.lance.testall.testentity.entity,com.lance.testall.threadpool.entity
 
 # JDK 线程池实验（见 ai_docs/thread/26052502-*.md）
 # 实验 3 触发拒绝：可启用 profile exp3-reject（queue=5, max=2）

@@ -1,9 +1,9 @@
-package com.lance.testall.controller;
+package com.lance.testall.testentity.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lance.common.model.ApiResult;
-import com.lance.testall.entity.TestEntity;
-import com.lance.testall.mapper.TestEntityMapper;
+import com.lance.testall.testentity.entity.TestEntity;
+import com.lance.testall.testentity.mapper.TestEntityMapper;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

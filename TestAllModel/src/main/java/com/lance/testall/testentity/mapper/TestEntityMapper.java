@@ -1,7 +1,7 @@
-package com.lance.testall.mapper;
+package com.lance.testall.testentity.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.lance.testall.entity.TestEntity;
+import com.lance.testall.testentity.entity.TestEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
