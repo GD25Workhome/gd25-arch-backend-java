@@ -39,6 +39,9 @@ public class StockDeductService {
     /** 实验 3b：读写锁，写扣减 / 读库存 */
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
+    /** 实验 3a：未传入 Semaphore 时使用的共享实例（许可数见 lock.demo.semaphore-permits） */
+    private final Semaphore defaultSemaphore;
+
     public StockDeductService(
             LockDemoStockMapper stockMapper,
             LockDemoProperties properties,
@@ -46,6 +49,7 @@ public class StockDeductService {
         this.stockMapper = stockMapper;
         this.properties = properties;
         this.dbStockDeductService = dbStockDeductService;
+        this.defaultSemaphore = new Semaphore(properties.getSemaphorePermits());
     }
 
     /**
@@ -158,9 +162,12 @@ public class StockDeductService {
 
     /**
      * Semaphore 做「准入控制」：限制同时进入的线程数；内层 synchronized 保证读-改-写正确。
+     * <p>
+     * {@code semaphore} 为 null 时使用本 Bean 内共享的 {@link #defaultSemaphore}，避免每次调用新建实例导致限流失效。
+     * 批量实验仍应通过 {@link DeductOptions} 传入每批独立的 Semaphore（见 {@code LockDemoService#buildDeductOptions}）。
      */
     public DeductResult deductWithSemaphore(String skuId, Semaphore semaphore) {
-        Semaphore effective = semaphore != null ? semaphore : new Semaphore(properties.getSemaphorePermits());
+        Semaphore effective = semaphore != null ? semaphore : defaultSemaphore;
         try {
             effective.acquire();
         } catch (InterruptedException ex) {
