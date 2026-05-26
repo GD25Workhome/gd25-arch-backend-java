@@ -19,7 +19,7 @@
     </properties>
 
     <dependencies>
-        <!-- Lombok依赖，用于简化代码 -->
+        <!-- Lombok：版本由根 POM 统一管理；compile 以便依赖 common 的模块可使用 @Data 等注解 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

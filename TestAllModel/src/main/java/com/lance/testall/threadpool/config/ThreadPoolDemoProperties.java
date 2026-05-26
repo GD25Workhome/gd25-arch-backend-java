@@ -1,10 +1,12 @@
 package com.lance.testall.threadpool.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * JDK 线程池实验配置，前缀 thread-pool.demo。
  */
+@Data
 @ConfigurationProperties(prefix = "thread-pool.demo")
 public class ThreadPoolDemoProperties {
 
@@ -15,60 +17,4 @@ public class ThreadPoolDemoProperties {
     private String threadNamePrefix = "tp-demo-";
     private String rejectionPolicy = "abort";
     private int awaitTerminationSeconds = 30;
-
-    public int getCorePoolSize() {
-        return corePoolSize;
-    }
-
-    public void setCorePoolSize(int corePoolSize) {
-        this.corePoolSize = corePoolSize;
-    }
-
-    public int getMaxPoolSize() {
-        return maxPoolSize;
-    }
-
-    public void setMaxPoolSize(int maxPoolSize) {
-        this.maxPoolSize = maxPoolSize;
-    }
-
-    public int getQueueCapacity() {
-        return queueCapacity;
-    }
-
-    public void setQueueCapacity(int queueCapacity) {
-        this.queueCapacity = queueCapacity;
-    }
-
-    public int getKeepAliveSeconds() {
-        return keepAliveSeconds;
-    }
-
-    public void setKeepAliveSeconds(int keepAliveSeconds) {
-        this.keepAliveSeconds = keepAliveSeconds;
-    }
-
-    public String getThreadNamePrefix() {
-        return threadNamePrefix;
-    }
-
-    public void setThreadNamePrefix(String threadNamePrefix) {
-        this.threadNamePrefix = threadNamePrefix;
-    }
-
-    public String getRejectionPolicy() {
-        return rejectionPolicy;
-    }
-
-    public void setRejectionPolicy(String rejectionPolicy) {
-        this.rejectionPolicy = rejectionPolicy;
-    }
-
-    public int getAwaitTerminationSeconds() {
-        return awaitTerminationSeconds;
-    }
-
-    public void setAwaitTerminationSeconds(int awaitTerminationSeconds) {
-        this.awaitTerminationSeconds = awaitTerminationSeconds;
-    }
 }

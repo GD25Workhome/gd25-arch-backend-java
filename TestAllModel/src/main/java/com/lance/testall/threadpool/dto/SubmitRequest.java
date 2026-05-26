@@ -1,8 +1,11 @@
 package com.lance.testall.threadpool.dto;
 
+import lombok.Data;
+
 /**
  * 批量提交线程池任务请求体。
  */
+@Data
 public class SubmitRequest {
 
     /** 本批子任务数量，默认 10 */
@@ -16,36 +19,4 @@ public class SubmitRequest {
 
     /** 可选批次备注 */
     private String batchTag;
-
-    public Integer getTaskCount() {
-        return taskCount;
-    }
-
-    public void setTaskCount(Integer taskCount) {
-        this.taskCount = taskCount;
-    }
-
-    public Integer getWorkDelayMs() {
-        return workDelayMs;
-    }
-
-    public void setWorkDelayMs(Integer workDelayMs) {
-        this.workDelayMs = workDelayMs;
-    }
-
-    public Boolean getWaitForComplete() {
-        return waitForComplete;
-    }
-
-    public void setWaitForComplete(Boolean waitForComplete) {
-        this.waitForComplete = waitForComplete;
-    }
-
-    public String getBatchTag() {
-        return batchTag;
-    }
-
-    public void setBatchTag(String batchTag) {
-        this.batchTag = batchTag;
-    }
 }

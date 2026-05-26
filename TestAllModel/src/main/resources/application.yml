@@ -22,7 +22,20 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  type-aliases-package: com.lance.testall.testentity.entity,com.lance.testall.threadpool.entity
+  type-aliases-package: com.lance.testall.testentity.entity,com.lance.testall.threadpool.entity,com.lance.testall.lock.entity
+
+# 并发锁实验（见 ai_docs/lock/26052602-*.md）
+lock:
+  demo:
+    default-sku-id: SKU-DEMO-001
+    thread-pool:
+      core-pool-size: 50
+      max-pool-size: 50
+      queue-capacity: 500
+      thread-name-prefix: lock-demo-
+    try-lock-timeout-ms: 100
+    semaphore-permits: 10
+    optimistic-max-retries: 5
 
 # JDK 线程池实验（见 ai_docs/thread/26052502-*.md）
 # 实验 3 触发拒绝：可启用 profile exp3-reject（queue=5, max=2）
