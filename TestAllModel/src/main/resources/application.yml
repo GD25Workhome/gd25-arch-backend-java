@@ -13,6 +13,18 @@ spring:
     init:
       mode: always
       schema-locations: classpath:schema.sql
+  # Redis 默认连本机 6379（与 brew install redis 一致）
+  # - 本地显式 profile: redis-local → application-redis-local.yml
+  # - 云实例 profile: redis-cloud → application-redis-cloud.yml（需 REDIS_PASSWORD）
+  # - 探活: GET /api/redis-test/ping
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      # username/password 仅 redis-cloud profile 配置；本地无密码 Redis 勿设置这两项
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+      timeout: 5s
 
 server:
   port: 8080
@@ -36,6 +48,12 @@ lock:
     try-lock-timeout-ms: 100
     semaphore-permits: 10
     optimistic-max-retries: 5
+  # 实验 6：Redis 分布式锁（见 ai_docs/lock/26052604-*.md）
+  redis:
+    enabled: true
+    key-prefix: "lock:stock:"
+    wait-seconds: 3
+    lease-seconds: 300
 
 # JDK 线程池实验（见 ai_docs/thread/26052502-*.md）
 # 实验 3 触发拒绝：可启用 profile exp3-reject（queue=5, max=2）
@@ -68,3 +86,7 @@ mybatis:
 logging:
   level:
     com.lance.testall: INFO
+
+redis:
+  test:
+    key-prefix: "testall:redis-test:"

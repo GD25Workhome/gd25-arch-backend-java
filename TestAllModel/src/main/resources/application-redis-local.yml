@@ -1,0 +1,17 @@
+# 本地 Redis（Homebrew / 源码安装，默认无密码）
+# 前置: brew services start redis && redis-cli ping  # 应返回 PONG
+#
+# 启动示例:
+#   mvn -pl TestAllModel spring-boot:run -Dspring-boot.run.profiles=redis-local
+#   mvn -pl TestAllModel spring-boot:run -Dspring-boot.run.profiles=postgresql,redis-local
+# 探活: curl http://localhost:8080/api/redis-test/ping
+#
+# 环境变量（一般无需设置）: REDIS_HOST、REDIS_PORT
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      ssl:
+        enabled: false
+      timeout: 3s

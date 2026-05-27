@@ -13,6 +13,8 @@ import com.lance.testall.lock.entity.LockDemoStock;
 import com.lance.testall.lock.entity.LockStrategy;
 import com.lance.testall.lock.mapper.LockDemoRunLogMapper;
 import com.lance.testall.lock.mapper.LockDemoStockMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -38,7 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Service
 public class LockDemoService {
-
+    private static final Logger log = LoggerFactory.getLogger(LockDemoService.class);
     private final LockDemoStockMapper stockMapper;
     private final LockDemoRunLogMapper runLogMapper;
     private final StockDeductService stockDeductService;
@@ -92,9 +93,7 @@ public class LockDemoService {
         int recordedInitial = before.getStock();
 
         // ---------- 2. 并发计数器（线程安全，供池内任务累加） ----------
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failCount = new AtomicInteger();
-        AtomicInteger errorCount = new AtomicInteger();
+        RunResultCounter resultCounter = new RunResultCounter();
         CountDownLatch latch = new CountDownLatch(totalTasks);
 
         // ---------- 3. 为本批实验创建临时线程池（与 threadpool 实验的常驻池隔离） ----------
@@ -118,15 +117,9 @@ public class LockDemoService {
                         try {
                             // 底层：按 strategy 加锁（或不加锁）后读-改-写 stock
                             DeductResult result = stockDeductService.deductOnce(skuId, strategy, deductOptions);
-                            switch (result) {
-                                case SUCCESS -> successCount.incrementAndGet();
-                                case INSUFFICIENT, VERSION_CONFLICT -> failCount.incrementAndGet();
-                                case LOCK_TIMEOUT -> errorCount.incrementAndGet();
-                                case ERROR -> errorCount.incrementAndGet();
-                                default -> errorCount.incrementAndGet();
-                            }
+                            resultCounter.record(result);
                         } catch (Exception ex) {
-                            errorCount.incrementAndGet();
+                            resultCounter.recordUncaughtException();
                         } finally {
                             latch.countDown();
                         }
@@ -145,8 +138,9 @@ public class LockDemoService {
         int finalStock = after != null && after.getStock() != null ? after.getStock() : -1;
 
         // 超卖：成功次数超过初始库存，或最终库存为负（无锁时常见）
-        boolean anomaly = successCount.get() > recordedInitial || finalStock < 0;
-        String anomalyReason = resolveAnomalyReason(successCount.get(), recordedInitial, finalStock, anomaly);
+        boolean anomaly = resultCounter.getSuccessCount() > recordedInitial || finalStock < 0;
+        String anomalyReason = resolveAnomalyReason(
+                resultCounter.getSuccessCount(), recordedInitial, finalStock, anomaly);
 
         // ---------- 6. 批次结果落库 lock_demo_run_log ----------
         LockDemoRunLog logRow = new LockDemoRunLog();
@@ -154,9 +148,10 @@ public class LockDemoService {
         logRow.setLockStrategy(strategy.name());
         logRow.setThreadCount(threadCount);
         logRow.setRequestsPerThread(requestsPerThread);
-        logRow.setSuccessCount(successCount.get());
-        logRow.setFailCount(failCount.get());
-        logRow.setErrorCount(errorCount.get());
+        logRow.setSuccessCount(resultCounter.getSuccessCount());
+        logRow.setFailCount(resultCounter.getFailCount());
+        logRow.setErrorCount(resultCounter.getErrorCount());
+        logRow.setResultBreakdown(resultCounter.toBreakdownJson());
         logRow.setInitialStock(recordedInitial);
         logRow.setFinalStock(finalStock);
         logRow.setAnomaly(anomaly);
@@ -165,6 +160,7 @@ public class LockDemoService {
         logRow.setInstanceId(instanceId);
         logRow.setBatchTag(request.getBatchTag());
         logRow.setCreatedAt(LocalDateTime.now());
+        log.info("logRow={}", logRow);
         runLogMapper.insert(logRow);
 
         // ---------- 7. 组装 API 响应 ----------
@@ -173,9 +169,10 @@ public class LockDemoService {
         response.setLockStrategy(strategy.name());
         response.setInitialStock(recordedInitial);
         response.setFinalStock(finalStock);
-        response.setSuccessCount(successCount.get());
-        response.setFailCount(failCount.get());
-        response.setErrorCount(errorCount.get());
+        response.setSuccessCount(resultCounter.getSuccessCount());
+        response.setFailCount(resultCounter.getFailCount());
+        response.setErrorCount(resultCounter.getErrorCount());
+        response.setResultBreakdown(resultCounter.toBreakdownMap());
         response.setTotalRequests(totalTasks);
         response.setAnomaly(anomaly);
         response.setAnomalyReason(anomalyReason);
@@ -201,6 +198,7 @@ public class LockDemoService {
         response.setSuccessCount(logRow.getSuccessCount());
         response.setFailCount(logRow.getFailCount());
         response.setErrorCount(logRow.getErrorCount());
+        response.setResultBreakdown(RunResultCounter.parseBreakdownJson(logRow.getResultBreakdown()));
         response.setTotalRequests(logRow.getThreadCount() * logRow.getRequestsPerThread());
         response.setAnomaly(logRow.getAnomaly());
         response.setAnomalyReason(logRow.getAnomalyReason());

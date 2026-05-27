@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * 库存扣减与各锁策略实现（实验 0～5）。
+ * 库存扣减与各锁策略实现（实验 0～6）。
  */
 @Service
 public class StockDeductService {
@@ -32,6 +32,7 @@ public class StockDeductService {
     private final LockDemoStockMapper stockMapper;
     private final LockDemoProperties properties;
     private final DbStockDeductService dbStockDeductService;
+    private final RedisStockLockService redisStockLockService;
 
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private final ReentrantLock fairReentrantLock = new ReentrantLock(true);
@@ -45,10 +46,12 @@ public class StockDeductService {
     public StockDeductService(
             LockDemoStockMapper stockMapper,
             LockDemoProperties properties,
-            DbStockDeductService dbStockDeductService) {
+            DbStockDeductService dbStockDeductService,
+            RedisStockLockService redisStockLockService) {
         this.stockMapper = stockMapper;
         this.properties = properties;
         this.dbStockDeductService = dbStockDeductService;
+        this.redisStockLockService = redisStockLockService;
         this.defaultSemaphore = new Semaphore(properties.getSemaphorePermits());
     }
 
@@ -76,6 +79,9 @@ public class StockDeductService {
             case DB_OPTIMISTIC -> deductOptimistic(skuId, options.getOptimisticMaxRetries(), options.getSimulateDelayMs());
             case DB_ATOMIC_UPDATE -> deductAtomicUpdate(skuId);
             case DB_PESSIMISTIC -> dbStockDeductService.deductPessimistic(skuId, options.getSimulateDelayMs());
+
+            case REDIS -> deductWithRedis(skuId);
+            case REDIS_LOCAL_ONLY -> deductRedisLocalOnly(skuId);
         };
     }
 
@@ -221,6 +227,30 @@ public class StockDeductService {
     public DeductResult deductAtomicUpdate(String skuId) {
         int updated = stockMapper.atomicDecrementStock(skuId);
         return updated == 1 ? DeductResult.SUCCESS : DeductResult.INSUFFICIENT;
+    }
+
+    // ==================== 实验 6：Redis 分布式锁 ====================
+
+    /**
+     * 实验 6a/6c：先抢 Redis 锁，再在锁内执行 DB 读-改-写。
+     */
+    public DeductResult deductWithRedis(String skuId) {
+        String token = redisStockLockService.tryLock(skuId);
+        if (token == null) {
+            return DeductResult.LOCK_TIMEOUT;
+        }
+        try {
+            return deductCore(skuId);
+        } finally {
+            redisStockLockService.unlock(skuId, token);
+        }
+    }
+
+    /**
+     * 实验 6b：故意不使用 Redis，仅 {@link #deductSyncStatic} 本地互斥（双实例时会超卖）。
+     */
+    public DeductResult deductRedisLocalOnly(String skuId) {
+        return deductSyncStatic(skuId);
     }
 
     // ==================== 公共 ====================

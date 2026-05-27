@@ -2,7 +2,7 @@
 
 > **定位**：[26052601-锁实验学习路径与总纲.md](./26052601-锁实验学习路径与总纲.md) 的**可运行落地设计**（API + 数据库 + 可选 Redis）。  
 > **实现模块**：`TestAllModel`（聚合 `web` + `mybatis`，默认 H2，可切 MySQL / PostgreSQL / Redis）。  
-> **状态**：实验 0～5 已实现；实验 6（Redis）待实现。
+> **状态**：实验 0～6 已实现（实验 6 为 SET NX + Lua，非 Redisson；6d 可重入未实现）。
 
 **关联文档**：[26052601-锁实验学习路径与总纲.md](./26052601-锁实验学习路径与总纲.md)
 
@@ -319,7 +319,9 @@ FROM lock_demo_run_log ORDER BY created_at DESC LIMIT 10;
 | 6c | 双实例 + `REDIS` | 合计 `successCount` ≤ 100，`finalStock=0` |
 | 6d | 同线程重入加锁 2 次 | 释放后其它线程可获取 |
 
-**双实例启动示例（实现后写入 26052603）**：
+**双实例启动与探活**：见 [26052604-Redis分布式锁实验思路与操作指南.md](./26052604-Redis分布式锁实验思路与操作指南.md)。
+
+**双实例启动示例（实现 lockStrategy 后）**：
 
 ```bash
 # 终端 A
@@ -457,7 +459,8 @@ CREATE INDEX idx_lock_run_batch ON lock_demo_run_log(batch_id);
 - [x] 实验 0～2 单 JVM 可跑通
 - [x] 实验 3～5（JUC / DB 乐观悲观锁）
 - [ ] MySQL profile：悲观锁完整体验（H2 已可跑通）
-- [ ] Redis + Redisson（或 Lua）：实验 6
+- [x] Redis 分布式锁（SET NX + Lua）：实验 6a～6c
+- [ ] Redisson / 可重入（实验 6d）
 - [x] 实现说明 [26052603-TestAllModel-锁实验实现说明.md](./26052603-TestAllModel-锁实验实现说明.md)
 - [ ] （可选）`LockDemoServiceTest` 固定种子复现无锁超卖
 

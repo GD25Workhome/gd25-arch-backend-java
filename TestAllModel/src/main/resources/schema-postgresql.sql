@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS lock_demo_run_log (
     success_count       INT          NOT NULL,
     fail_count          INT          NOT NULL,
     error_count         INT          NOT NULL,
+    result_breakdown    JSONB,
     initial_stock       INT          NOT NULL,
     final_stock         INT          NOT NULL,
     anomaly             BOOLEAN      NOT NULL,

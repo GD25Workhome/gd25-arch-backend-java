@@ -33,7 +33,11 @@ public enum LockStrategy {
     /** 实验 4b：单条 UPDATE 原子扣减 */
     DB_ATOMIC_UPDATE,
     /** 实验 5：SELECT FOR UPDATE 悲观锁 */
-    DB_PESSIMISTIC;
+    DB_PESSIMISTIC,
+    /** 实验 6a/6c：Redis 分布式锁 + DB 扣减 */
+    REDIS,
+    /** 实验 6b：仅 JVM 本地锁（对照，不用 Redis） */
+    REDIS_LOCAL_ONLY;
 
     public static LockStrategy fromApiValue(String value) {
         if (value == null || value.isBlank()) {

@@ -1,0 +1,14 @@
+# Redis Cloud 免费实例（公网 endpoint，非 TLS）
+# 本地 Homebrew Redis 请用 profile redis-local，见 application-redis-local.yml
+#
+# 启动示例：export REDIS_PASSWORD='你的密码' && mvn -pl TestAllModel spring-boot:run -Dspring-boot.run.profiles=redis-cloud
+# 实验 6 推荐（云）: spring.profiles.active=postgresql,redis-cloud
+spring:
+  data:
+    redis:
+      host: filigreed-interest-splendid-39890.db.redis.io
+      port: 16857
+      username: ${REDIS_USERNAME:default}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: false

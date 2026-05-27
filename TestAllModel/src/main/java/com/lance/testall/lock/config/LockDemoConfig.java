@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * 锁实验配置入口：绑定 application.yml 中 {@code lock.demo.*} 到 {@link LockDemoProperties}。
  */
 @Configuration
-@EnableConfigurationProperties(LockDemoProperties.class)
+@EnableConfigurationProperties({LockDemoProperties.class, LockDemoRedisProperties.class})
 @EnableTransactionManagement
 public class LockDemoConfig {
 }

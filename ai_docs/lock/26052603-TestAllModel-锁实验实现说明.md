@@ -1,9 +1,10 @@
-# TestAllModel：并发锁实验（0～5）实现说明
+# TestAllModel：并发锁实验（0～6）实现说明
 
 > **设计文档**：[26052602-TestAllModel-并发锁实验设计.md](./26052602-TestAllModel-并发锁实验设计.md)  
 > **学习总纲**：[26052601-锁实验学习路径与总纲.md](./26052601-锁实验学习路径与总纲.md)  
+> **Redis 实验操作**：[26052604-Redis分布式锁实验思路与操作指南.md](./26052604-Redis分布式锁实验思路与操作指南.md)  
 > **代码位置**：`TestAllModel/src/main/java/com/lance/testall/lock/`  
-> **实现范围**：实验 0～5（JVM 锁、JUC、数据库乐观/悲观锁）；实验 6（Redis）待实现
+> **实现范围**：实验 0～6（含 Redis SET NX + Lua；6d 可重入未实现）
 
 ---
 
@@ -27,11 +28,13 @@ TestAllModel/
 │   ├── controller/LockDemoController.java      # REST 入口
 │   ├── service/
 │   │   ├── LockDemoService.java                # 编排：线程池、DeductOptions、汇总、落库
-│   │   ├── StockDeductService.java             # JVM/JUC/DB 乐观&原子扣减
-│   │   └── DbStockDeductService.java           # 实验 5：@Transactional + FOR UPDATE
+│   │   ├── StockDeductService.java             # JVM/JUC/DB/Redis 扣减分发
+│   │   ├── DbStockDeductService.java           # 实验 5：@Transactional + FOR UPDATE
+│   │   └── RedisStockLockService.java          # 实验 6：SET NX + Lua 释放
 │   ├── config/
 │   │   ├── LockDemoConfig.java                 # 配置 + @EnableTransactionManagement
-│   │   └── LockDemoProperties.java             # lock.demo.* 绑定
+│   │   ├── LockDemoProperties.java             # lock.demo.* 绑定
+│   │   └── LockDemoRedisProperties.java        # lock.redis.* 绑定
 │   ├── dto/
 │   │   ├── LockRunRequest.java                 # /run 请求体
 │   │   ├── DeductOptions.java                  # 批次级扣减参数（Semaphore 等）
@@ -411,7 +414,34 @@ curl -s -X POST http://localhost:8080/api/lock-demo/run \
 
 **说明**：H2 默认即可验证；生产级行锁行为建议 `--spring.profiles.active=mysql`。
 
-### 9.6 SQL 核对
+### 9.6 实验 6：Redis 分布式锁
+
+启动 profile 见 [26052604](./26052604-Redis分布式锁实验思路与操作指南.md)（`postgresql,redis-cloud`，`export REDIS_PASSWORD`）。
+
+| 策略 | 实现类 / 方法 | 说明 |
+|------|----------------|------|
+| `REDIS` | `RedisStockLockService` + `StockDeductService#deductWithRedis` | `SET NX` + `lease-seconds` TTL；Lua 校验 token 后 `DEL` |
+| `REDIS_LOCAL_ONLY` | `StockDeductService#deductRedisLocalOnly` → `deductSyncStatic` | 故意不用 Redis，双实例对照超卖 |
+
+配置（`application.yml` → `lock.redis`）：
+
+```yaml
+lock.redis.enabled: true
+lock.redis.key-prefix: "lock:stock:"
+lock.redis.wait-seconds: 3
+lock.redis.lease-seconds: 10
+```
+
+```bash
+# 6a 单实例
+curl -s -X POST http://localhost:8080/api/lock-demo/run \
+  -H 'Content-Type: application/json' \
+  -d '{"lockStrategy":"REDIS","initialStock":100,"threadCount":200,"requestsPerThread":1,"resetStockBeforeRun":true,"batchTag":"exp6a"}'
+```
+
+双实例 6b/6c 的 curl 与操作时序见 26052604 §五。
+
+### 9.7 SQL 核对
 
 ```sql
 SELECT batch_id, lock_strategy, success_count, fail_count, error_count,
@@ -429,7 +459,7 @@ SELECT sku_id, stock, version FROM lock_demo_stock WHERE sku_id = 'SKU-DEMO-001'
 
 | 文件 | 覆盖 |
 |------|------|
-| `LockDemoServiceTest` | `NONE`、`SYNC_STATIC`、`REENTRANT`、`SEMAPHORE`、`READ_WRITE`、`DB_*` |
+| `LockDemoServiceTest` | 0～5 各策略 + `REDIS_LOCAL_ONLY`；`REDIS` 在设置 `REDIS_PASSWORD` 时运行 |
 | `LockDemoAtomicCompareTest` | 实验 3c：`AtomicInteger` 累加 |
 
 ```bash
@@ -451,13 +481,13 @@ mvn test -Dtest=LockDemoServiceTest,LockDemoAtomicCompareTest
 | 实验 4b `DB_ATOMIC_UPDATE` | `deductAtomicUpdate` + `atomicDecrementStock` |
 | 实验 5 `DB_PESSIMISTIC` | `DbStockDeductService.deductPessimistic` + `selectForUpdate` |
 | `POST /api/lock-demo/run` | `LockDemoController` → `LockDemoService.run` |
-| 实验 6 Redis | **未实现** |
+| 实验 6 `REDIS` / `REDIS_LOCAL_ONLY` | `RedisStockLockService` + `deductWithRedis` / `deductRedisLocalOnly` |
 
 ---
 
 ## 十二、后续扩展（未实现）
 
-1. **实验 6**：Redisson / Redis 分布式锁、双实例对照。
+1. **实验 6d**：Redisson 可重入 / watchdog 续期。
 2. **MySQL profile**：悲观锁、行锁在真实 InnoDB 下的完整体验文档化。
 
 ---
