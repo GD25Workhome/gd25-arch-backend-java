@@ -4,7 +4,7 @@
 > **学习总纲**：[26052601-锁实验学习路径与总纲.md](./26052601-锁实验学习路径与总纲.md)  
 > **Redis 实验操作**：[26052604-Redis分布式锁实验思路与操作指南.md](./26052604-Redis分布式锁实验思路与操作指南.md)  
 > **代码位置**：`TestAllModel/src/main/java/com/lance/testall/lock/`  
-> **实现范围**：实验 0～6（含 Redis SET NX + Lua；6d 可重入未实现）
+> **实现范围**：实验 0～6（含 Redis SET NX + Lua；**6d** `REDIS_REDISSON` + Redisson 看门狗，见 [26052701](./26052701-Redisson看门狗分布式锁技术方案.md)）
 
 ---
 
@@ -420,8 +420,9 @@ curl -s -X POST http://localhost:8080/api/lock-demo/run \
 
 | 策略 | 实现类 / 方法 | 说明 |
 |------|----------------|------|
-| `REDIS` | `RedisStockLockService` + `StockDeductService#deductWithRedis` | `SET NX` + `lease-seconds` TTL；Lua 校验 token 后 `DEL` |
-| `REDIS_LOCAL_ONLY` | `StockDeductService#deductRedisLocalOnly` → `deductSyncStatic` | 故意不用 Redis，双实例对照超卖 |
+| `REDIS` | `RedisStockLockService` + `deductWithRedis` | `SET NX` + `lease-seconds` TTL；Lua 校验 token 后 `DEL` |
+| `REDIS_REDISSON` | `RedissonStockLockService` + `deductWithRedisson` | `RLock.tryLock(wait)` + 看门狗；`simulateDelayMs` 持锁休眠（仅本策略） |
+| `REDIS_LOCAL_ONLY` | `deductRedisLocalOnly` → `deductSyncStatic` | 故意不用 Redis，双实例对照超卖 |
 
 配置（`application.yml` → `lock.redis`）：
 
@@ -487,7 +488,7 @@ mvn test -Dtest=LockDemoServiceTest,LockDemoAtomicCompareTest
 
 ## 十二、后续扩展（未实现）
 
-1. **实验 6d**：Redisson 可重入 / watchdog 续期。
+1. **实验 6d 重入演示**：同线程 `RLock` 嵌套 `lock` 两次（watchdog 已实现，见 `REDIS_REDISSON`）。
 2. **MySQL profile**：悲观锁、行锁在真实 InnoDB 下的完整体验文档化。
 
 ---

@@ -34,10 +34,15 @@ public enum LockStrategy {
     DB_ATOMIC_UPDATE,
     /** 实验 5：SELECT FOR UPDATE 悲观锁 */
     DB_PESSIMISTIC,
-    /** 实验 6a/6c：Redis 分布式锁 + DB 扣减 */
+    /** 实验 6a/6c：自研 Redis 锁（SET NX + 固定 TTL + Lua 释放），无看门狗续期 */
     REDIS,
     /** 实验 6b：仅 JVM 本地锁（对照，不用 Redis） */
-    REDIS_LOCAL_ONLY;
+    REDIS_LOCAL_ONLY,
+    /**
+     * 实验 6d：Redisson {@code RLock} + 看门狗自动续期 + DB 扣减。
+     * <p>设计说明见 ai_docs/lock/26052701-Redisson看门狗分布式锁技术方案.md
+     */
+    REDIS_REDISSON;
 
     public static LockStrategy fromApiValue(String value) {
         if (value == null || value.isBlank()) {

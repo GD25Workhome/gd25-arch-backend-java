@@ -8,6 +8,7 @@ import com.lance.testall.lock.entity.LockStrategy;
 import com.lance.testall.lock.mapper.LockDemoStockMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ public class StockDeductService {
     private final LockDemoProperties properties;
     private final DbStockDeductService dbStockDeductService;
     private final RedisStockLockService redisStockLockService;
+    private final RedissonStockLockService redissonStockLockService;
 
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private final ReentrantLock fairReentrantLock = new ReentrantLock(true);
@@ -47,11 +49,13 @@ public class StockDeductService {
             LockDemoStockMapper stockMapper,
             LockDemoProperties properties,
             DbStockDeductService dbStockDeductService,
-            RedisStockLockService redisStockLockService) {
+            RedisStockLockService redisStockLockService,
+            ObjectProvider<RedissonStockLockService> redissonStockLockServiceProvider) {
         this.stockMapper = stockMapper;
         this.properties = properties;
         this.dbStockDeductService = dbStockDeductService;
         this.redisStockLockService = redisStockLockService;
+        this.redissonStockLockService = redissonStockLockServiceProvider.getIfAvailable();
         this.defaultSemaphore = new Semaphore(properties.getSemaphorePermits());
     }
 
@@ -81,6 +85,7 @@ public class StockDeductService {
             case DB_PESSIMISTIC -> dbStockDeductService.deductPessimistic(skuId, options.getSimulateDelayMs());
 
             case REDIS -> deductWithRedis(skuId);
+            case REDIS_REDISSON -> deductWithRedisson(skuId, options.getSimulateDelayMs());
             case REDIS_LOCAL_ONLY -> deductRedisLocalOnly(skuId);
         };
     }
@@ -243,6 +248,29 @@ public class StockDeductService {
             return deductCore(skuId);
         } finally {
             redisStockLockService.unlock(skuId, token);
+        }
+    }
+
+    /**
+     * 实验 6d：Redisson RLock + 看门狗续期，再在锁内执行 DB 读-改-写。
+     * <p>
+     * {@code simulateDelayMs} 用于 6d-w：持锁休眠观察 Redis TTL 被续期（仅本策略生效）。
+     */
+    public DeductResult deductWithRedisson(String skuId, int simulateDelayMs) {
+        if (redissonStockLockService == null) {
+            throw new IllegalStateException(
+                    "REDIS_REDISSON 未启用：请设置 lock.redis.enabled=true 且 lock.redisson.enabled=true，并确保 RedissonClient 已创建");
+        }
+        if (!redissonStockLockService.tryLock(skuId)) {
+            return DeductResult.LOCK_TIMEOUT;
+        }
+        try {
+            if (simulateDelayMs > 0) {
+                sleepQuietly(simulateDelayMs);
+            }
+            return deductCore(skuId);
+        } finally {
+            redissonStockLockService.unlock(skuId);
         }
     }
 

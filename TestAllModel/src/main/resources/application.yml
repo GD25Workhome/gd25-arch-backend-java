@@ -54,6 +54,11 @@ lock:
     key-prefix: "lock:stock:"
     wait-seconds: 3
     lease-seconds: 300
+  # 实验 6d：Redisson RLock + 看门狗（见 ai_docs/lock/26052701-*.md）
+  redisson:
+    enabled: true
+    key-prefix: "lock:redisson:stock:"
+    watchdog-timeout-seconds: 30
 
 # JDK 线程池实验（见 ai_docs/thread/26052502-*.md）
 # 实验 3 触发拒绝：可启用 profile exp3-reject（queue=5, max=2）

@@ -1,0 +1,6 @@
+# 单元测试默认不连 Redis / Redisson，避免 CI 无 Redis 时启动失败
+lock:
+  redis:
+    enabled: false
+  redisson:
+    enabled: false

@@ -2,7 +2,7 @@
 
 > **定位**：[26052601-锁实验学习路径与总纲.md](./26052601-锁实验学习路径与总纲.md) 的**可运行落地设计**（API + 数据库 + 可选 Redis）。  
 > **实现模块**：`TestAllModel`（聚合 `web` + `mybatis`，默认 H2，可切 MySQL / PostgreSQL / Redis）。  
-> **状态**：实验 0～6 已实现（实验 6 为 SET NX + Lua，非 Redisson；6d 可重入未实现）。
+> **状态**：实验 0～6 已实现（6a～6c：`REDIS` SET NX + Lua；**6d**：`REDIS_REDISSON` Redisson 看门狗，见 [26052701](./26052701-Redisson看门狗分布式锁技术方案.md)）。
 
 **关联文档**：[26052601-锁实验学习路径与总纲.md](./26052601-锁实验学习路径与总纲.md)
 
@@ -104,7 +104,8 @@ WHERE sku_id = ? AND stock >= 1;
 | `DB_OPTIMISTIC` | version 字段 | 冲突重试 `maxRetries` |
 | `DB_PESSIMISTIC` | `@Transactional` + `SELECT … FOR UPDATE` | 行锁 |
 | `DB_ATOMIC_UPDATE` | 单条 CAS SQL | 无显式锁对象 |
-| `REDIS` | 分布式锁 | Redisson `RLock` 或自研 Lua |
+| `REDIS` | 分布式锁（自研） | SET NX + Lua |
+| `REDIS_REDISSON` | 分布式锁（Redisson） | `RLock` + 看门狗续期 |
 | `REDIS_LOCAL_ONLY` | 仅 `synchronized` | 双实例时故意失败对照 |
 
 ### 3.2 各策略实验要点（面试可答）
@@ -317,7 +318,8 @@ FROM lock_demo_run_log ORDER BY created_at DESC LIMIT 10;
 | 6a | 单实例 + `REDIS` | `anomaly=false` |
 | 6b | 双实例 + `REDIS_LOCAL_ONLY`（仅 synchronized） | 至少一台 `anomaly=true` |
 | 6c | 双实例 + `REDIS` | 合计 `successCount` ≤ 100，`finalStock=0` |
-| 6d | 同线程重入加锁 2 次 | 释放后其它线程可获取 |
+| 6d | `REDIS_REDISSON` 单/双实例 + 可选 `simulateDelayMs` | 对齐 6a/6c；见 26052701 §七 |
+| 6d-r | 同线程重入加锁 2 次（未实现） | 释放后其它线程可获取 |
 
 **双实例启动与探活**：见 [26052604-Redis分布式锁实验思路与操作指南.md](./26052604-Redis分布式锁实验思路与操作指南.md)。
 
@@ -460,7 +462,8 @@ CREATE INDEX idx_lock_run_batch ON lock_demo_run_log(batch_id);
 - [x] 实验 3～5（JUC / DB 乐观悲观锁）
 - [ ] MySQL profile：悲观锁完整体验（H2 已可跑通）
 - [x] Redis 分布式锁（SET NX + Lua）：实验 6a～6c
-- [ ] Redisson / 可重入（实验 6d）
+- [x] Redisson 看门狗（实验 6d，`REDIS_REDISSON`）
+- [ ] 可重入演示（实验 6d-r）
 - [x] 实现说明 [26052603-TestAllModel-锁实验实现说明.md](./26052603-TestAllModel-锁实验实现说明.md)
 - [ ] （可选）`LockDemoServiceTest` 固定种子复现无锁超卖
 
