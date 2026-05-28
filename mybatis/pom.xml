@@ -15,14 +15,12 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- MapStruct 版本 -->
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
         <!-- MyBatis-Plus 版本 - 升级到支持 Spring Boot 3.3.x 的版本 -->
         <mybatis-plus-boot-starter.version>3.5.7</mybatis-plus-boot-starter.version>
     </properties>
 
     <dependencies>
-        <!-- mysql jdbc引擎 - Java 17 和 Spring Boot 3.x 使用新版本命名 -->
+        <!-- mysql jdbc引擎 - Spring Boot 3.x 使用 mysql-connector-j 命名 -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
@@ -34,16 +32,14 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
-        <!-- 添加实体转换工具 - MapStruct 支持 Java 17 -->
+        <!-- 实体转换：版本由根 POM dependencyManagement 统一管理 -->
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
-            <version>${mapstruct.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -73,7 +69,6 @@
         <dependency>
             <groupId>p6spy</groupId>
             <artifactId>p6spy</artifactId>
-            <version>3.9.1</version>
         </dependency>
 
         <!-- 测试依赖 -->
